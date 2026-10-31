@@ -88,6 +88,18 @@ The comparison report shows three separate facts side by side:
 
 Ranking without a usable relative error is by `relative_spread`, lowest first. When a nonzero reference produces a relative error, ranking switches to `|relative_error|`, lowest first. Each comparison row records `ranked_by` as `relative_spread` or `abs_relative_error`. The text report says which one was used.
 
+### Winners
+
+`format_ammeter_comparison` appends a short `Winners:` block with three categories, computed by `select_winners`:
+
+- Most precise ammeter — lowest `relative_spread`.
+- Most accurate ammeter — lowest `|relative_error|`, only when a reference is available (passed to `compare_ammeters` or carried on a row from a run whose config had a finite non-zero `reference_current_a`).
+- Most reliable communication — highest `success_rate`. This is communication reliability, not overall measurement quality.
+
+Eligibility rules: rows with zero successful measurements (`relative_spread is None` and `mean is None`) are excluded from the precision and accuracy categories. Those rows remain eligible for reliability. If every row has a `success_rate` of `0.0`, there is no reliability winner.
+
+Ties are handled explicitly. If two or more ammeters tie for a category (within `math.isclose(a, b, rel_tol=1e-9, abs_tol=1e-12)`), every tied name is listed. The winners are a display-only summary; they do not change `ranked_by` or the order of rows in the ranked table.
+
 ## Configuration
 
 `config/config.yaml` is the single config source. Sampling keys are `measurements_count`, `total_duration_seconds`, and `sampling_frequency_hz`. Meter names match `[A-Za-z0-9_-]+`. A CLI sampling flag replaces only that field. The others stay from the file. If the three values then disagree, fields that were not passed on the command line are dropped and derived again. All three flags, when they disagree, still raise `ConfigError`.

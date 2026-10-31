@@ -587,6 +587,74 @@ def format_report(result: Dict) -> str:
     return "\n".join(lines)
 
 
+def select_winners(rows: List[Dict], *, has_reference: Optional[bool] = None) -> Dict[str, Optional[Dict]]:
+    """Pick precision/accuracy/reliability winners from `compare_ammeters` rows.
+
+    Display-only summary; does not change ranking. Zero-count rows are excluded from
+    precision and accuracy. All-zero reliability yields no reliability winner. Ties
+    (within math.isclose rel_tol=1e-9, abs_tol=1e-12) list every tied ammeter.
+    """
+    if has_reference is None:
+        has_reference = any(r.get("relative_error") is not None for r in rows)
+
+    def _tied(candidates, key):
+        best = key(candidates[0])
+        return [c for c in candidates if math.isclose(key(c), best, rel_tol=1e-9, abs_tol=1e-12)]
+
+    winners: Dict[str, Optional[Dict]] = {"precision": None, "accuracy": None, "reliability": None}
+
+    precision_candidates = [r for r in rows if r.get("relative_spread") is not None]
+    if precision_candidates:
+        sorted_p = sorted(precision_candidates, key=lambda r: r["relative_spread"])
+        tied = _tied(sorted_p, lambda r: r["relative_spread"])
+        winners["precision"] = {
+            "ammeters": [r["ammeter"] for r in tied],
+            "value": tied[0]["relative_spread"],
+            "metric": "relative_spread",
+        }
+
+    if has_reference:
+        accuracy_candidates = [r for r in rows if r.get("relative_error") is not None]
+        if accuracy_candidates:
+            sorted_a = sorted(accuracy_candidates, key=lambda r: abs(r["relative_error"]))
+            tied = _tied(sorted_a, lambda r: abs(r["relative_error"]))
+            winners["accuracy"] = {
+                "ammeters": [r["ammeter"] for r in tied],
+                "value": abs(tied[0]["relative_error"]),
+                "metric": "abs_relative_error",
+            }
+
+    reliability_candidates = [r for r in rows if r.get("success_rate") is not None]
+    if reliability_candidates:
+        sorted_r = sorted(reliability_candidates, key=lambda r: -r["success_rate"])
+        if sorted_r[0]["success_rate"] > 0.0:
+            tied = _tied(sorted_r, lambda r: r["success_rate"])
+            winners["reliability"] = {
+                "ammeters": [r["ammeter"] for r in tied],
+                "value": tied[0]["success_rate"],
+                "metric": "success_rate",
+            }
+    return winners
+
+
+_WINNER_LABELS = {
+    "precision": "most precise",
+    "accuracy": "most accurate",
+    "reliability": "most reliable communication",
+}
+_WINNER_METRIC_LABELS = {
+    "relative_spread": "relative_spread",
+    "abs_relative_error": "|rel.error|",
+    "success_rate": "success_rate",
+}
+
+
+def _format_winner_value(metric: str, value: float) -> str:
+    if metric == "success_rate":
+        return format(value, ".1%")
+    return format(value, ".3f")
+
+
 def format_ammeter_comparison(rows: List[Dict]) -> str:
     show_acc = any("relative_error" in r for r in rows)
     if rows and rows[0].get("ranked_by") == "abs_relative_error":
@@ -608,6 +676,18 @@ def format_ammeter_comparison(rows: List[Dict]) -> str:
     for r in rows:
         if r.get("relative_error_note"):
             lines.append(f"  {r['ammeter']}: {r['relative_error_note']}")
+
+    winners = select_winners(rows, has_reference=show_acc)
+    shown = [(cat, w) for cat, w in winners.items() if w is not None]
+    if shown:
+        label_width = max(len(_WINNER_LABELS[cat]) for cat, _ in shown)
+        lines.append("Winners:")
+        for cat, w in shown:
+            names = ", ".join(w["ammeters"])
+            metric_label = _WINNER_METRIC_LABELS[w["metric"]]
+            value_str = _format_winner_value(w["metric"], w["value"])
+            lines.append(f"  {_WINNER_LABELS[cat]:<{label_width}} : {names} ({metric_label}={value_str})")
+
     return "\n".join(lines)
 
 
