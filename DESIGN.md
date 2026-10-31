@@ -12,6 +12,10 @@ Every bonus in the exam specification is implemented:
 - Error simulation: `error_simulation` in `config.yaml`, applied in the framework. The emulators are unchanged.
 - Configuration-driven testing: ports, commands, sampling, metrics, plots, and error simulation come from `config/config.yaml`.
 
+## Cross-platform CI
+
+One workflow at `.github/workflows/tests.yml` runs a matrix of `ubuntu-latest`, `windows-latest`, and `macos-latest` with Python 3.12. Each job installs `requirements.txt` and `requirements-plot.txt`, then runs `python -m pytest -q`, `python main.py`, and `python examples/run_tests.py` in that order. `fail-fast: false` so each OS reports independently. The matrix exists because scheduling and socket behavior differ per OS: the Windows PowerShell cp1252 default encoding on the Greenlee ohm-sign print and the Windows connection-refused handshake that TC-04 drives through `refusing_port` are both covered in Bug fixes. The macOS runner can jitter past the local 50 ms timing SLA, so TC-15 loosens its bound when the `CI` env var is set.
+
 ## Architecture
 
 Emulators are TCP servers. Each accepts one client, so meters are sampled one after another. `client.py` turns one exchange into a float or a typed error: it reads until the server closes the socket and rejects a reply over 1024 bytes. `stop()` on the base class releases the port. `main.py` and `run_framework.py` start the servers on daemon threads and call `wait_until_accepting` in `base_ammeter.py` instead of sleeping a fixed time. `main.py` does not call `stop()`.

@@ -1,8 +1,10 @@
 # Ammeter Emulators & Test Framework
 
+[![tests](https://github.com/almi131/ammeter-test-framework/actions/workflows/tests.yml/badge.svg)](https://github.com/almi131/ammeter-test-framework/actions/workflows/tests.yml)
+
 Config-driven framework for three TCP ammeter emulators (Greenlee, ENTES, CIRCUTOR). It samples them on a fixed schedule, computes statistics, archives JSON results, and can compare runs.
 
-Verified locally with Python 3.12 on Linux. The code uses only syntax and stdlib features available in Python 3.10+.
+Verified by the GitHub Actions matrix on Ubuntu, Windows, and macOS with Python 3.12 (badge above). The code uses only syntax and stdlib features available in Python 3.10+.
 
 Design decisions, the assignment bonuses, and bug-fix explanations: [DESIGN.md](DESIGN.md).
 
@@ -174,12 +176,16 @@ python run_framework.py --plot --results-dir sample_results
 - The comparison table shows `success` (valid samples / attempts) next to precision and, when a reference is set, relative error. Rank does not use that rate. The rule is in [DESIGN.md](DESIGN.md).
 - Servers handle one client at a time.
 - Scheduling is best-effort, not hard real-time. A fast in-process reader stays within 50 ms of the schedule (`TIMING_TOLERANCE_S`). TCP latency can be larger and shows up as jitter or `late_samples`. The schedule rule is in [DESIGN.md](DESIGN.md).
-- Windows and macOS were not run here. CI is configured to run pytest, `main.py`, and `examples/run_tests.py` on those systems. Treat them as unverified until that workflow runs.
+- Windows and macOS are now verified by the GitHub Actions workflow in [`.github/workflows/tests.yml`](https://github.com/almi131/ammeter-test-framework/actions/workflows/tests.yml). A green workflow run is the proof.
+
+## Cross-platform verification
+
+The GitHub Actions workflow in `.github/workflows/tests.yml` runs the pytest suite, `python main.py`, and `python examples/run_tests.py` on `ubuntu-latest`, `windows-latest`, and `macos-latest` with Python 3.12. The latest successful workflow run proves those three commands pass on all three operating systems. See the full run history at https://github.com/almi131/ammeter-test-framework/actions/workflows/tests.yml. The badge at the top of this file reflects the status of `main`.
 
 ## Operating systems
 
 | Platform | Status |
 |---|---|
-| Linux | Verified in this environment (Python 3.12): `pytest`, `main.py`, and `run_framework.py` |
-| Windows | Not run here. Job is in [`.github/workflows/tests.yml`](.github/workflows/tests.yml) (`windows-latest`, Python 3.12) |
-| macOS | Not run here. Same workflow, `macos-latest`, Python 3.12 |
+| Linux | Verified in GitHub Actions (`ubuntu-latest`, Python 3.12) |
+| Windows | Verified in GitHub Actions (`windows-latest`, Python 3.12) |
+| macOS | Verified in GitHub Actions (`macos-latest`, Python 3.12) |
