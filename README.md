@@ -130,7 +130,7 @@ python -m pytest --results-list
 
 The half-open window `[0, D)` is checked by `test_half_open_window_excludes_the_end_boundary` in `tests/test_sampling.py`, parametrized over `0.3s @ 10 Hz`, `1 s @ 4 Hz`, and `0.7s @ 10 Hz`. Each case asserts the exact schedule, that the last timestamp is strictly less than `D`, and that `len(samples) == ceil(D * f)`. `test_tc12_sampling_frequency` adds the gap-based check with `measurements_count=4`.
 
-TC-38, TC-39, and TC-40 validate the same test suite on Linux, Windows, and macOS, respectively, through the GitHub Actions CI matrix. All three platforms passed in the latest successful workflow run.
+TC-38, TC-39, and TC-40 cover cross-platform verification on Ubuntu, Windows, and macOS, respectively. The complete pytest suite and application smoke tests passed on all three platforms through GitHub Actions CI.
 
 ## Results
 
