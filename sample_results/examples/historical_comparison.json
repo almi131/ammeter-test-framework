@@ -1,0 +1,33 @@
+{
+  "rows": [
+    {
+      "run_id": "meter_20261030T223448_c17c8fec",
+      "ammeter": "meter",
+      "status": "ok",
+      "start_time": "2026-10-30T22:34:48.073424+00:00",
+      "count": 4,
+      "mean": 10.0,
+      "median": 10.0,
+      "std_dev": 0.0,
+      "min": 10.0,
+      "max": 10.0,
+      "relative_spread": 0.0,
+      "mean_delta_pct": 0.0
+    },
+    {
+      "run_id": "meter_20261030T223448_1fd7f5d3",
+      "ammeter": "meter",
+      "status": "ok",
+      "start_time": "2026-10-30T22:34:48.074726+00:00",
+      "count": 4,
+      "mean": 20.0,
+      "median": 20.0,
+      "std_dev": 0.0,
+      "min": 20.0,
+      "max": 20.0,
+      "relative_spread": 0.0,
+      "mean_delta_pct": 100.0
+    }
+  ],
+  "report": "  run_id                                    mean    median       std       min       max  d_mean%\n  meter_20261030T223448_c17c8fec         10.0000   10.0000    0.0000   10.0000   10.0000      0.0\n  meter_20261030T223448_1fd7f5d3         20.0000   20.0000    0.0000   20.0000   20.0000    100.0"
+}

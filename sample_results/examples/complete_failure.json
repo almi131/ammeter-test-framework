@@ -1,0 +1,82 @@
+{
+  "run_id": "meter_20261030T223448_4b1a4a92",
+  "ammeter": "meter",
+  "status": "failed",
+  "metadata": {
+    "start_time": "2026-10-30T22:34:48.070002+00:00",
+    "end_time": "2026-10-30T22:34:48.070919+00:00",
+    "elapsed_s": 0.000917,
+    "config": {
+      "sampling": {
+        "measurements_count": 4,
+        "total_duration_seconds": 0.4,
+        "sampling_frequency_hz": 10.0,
+        "last_sample_s": 0.3
+      },
+      "client_timeout_seconds": 1.0
+    },
+    "error_count": 4,
+    "errors": [
+      {
+        "index": 0,
+        "error": "AmmeterConnectionError: down"
+      },
+      {
+        "index": 1,
+        "error": "AmmeterConnectionError: down"
+      },
+      {
+        "index": 2,
+        "error": "AmmeterConnectionError: down"
+      },
+      {
+        "index": 3,
+        "error": "AmmeterConnectionError: down"
+      }
+    ],
+    "python": "3.12.3",
+    "platform": "Linux-6.17.0-1032-oem-x86_64-with-glibc2.39"
+  },
+  "stats": {
+    "count": 0
+  },
+  "timing": {
+    "mean_jitter_ms": 0.0,
+    "max_abs_jitter_ms": 0.0,
+    "late_samples": 0
+  },
+  "samples": [
+    {
+      "index": 0,
+      "scheduled_s": 0.0,
+      "actual_s": 0.0,
+      "value": null,
+      "error": "AmmeterConnectionError: down",
+      "latency_ms": 0.0
+    },
+    {
+      "index": 1,
+      "scheduled_s": 0.1,
+      "actual_s": 0.1,
+      "value": null,
+      "error": "AmmeterConnectionError: down",
+      "latency_ms": 0.0
+    },
+    {
+      "index": 2,
+      "scheduled_s": 0.2,
+      "actual_s": 0.2,
+      "value": null,
+      "error": "AmmeterConnectionError: down",
+      "latency_ms": 0.0
+    },
+    {
+      "index": 3,
+      "scheduled_s": 0.3,
+      "actual_s": 0.3,
+      "value": null,
+      "error": "AmmeterConnectionError: down",
+      "latency_ms": 0.0
+    }
+  ]
+}

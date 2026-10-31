@@ -1,0 +1,5 @@
+=== METER  [ok]  run_id=meter_20261030T223448_faa4cfc8
+  sampling : 4 samples, 0.4s, 10.0 Hz   elapsed=0.000255s
+  errors   : 0
+  timing   : mean jitter 0.0 ms, max |jitter| 0.0 ms, late samples 0
+  stats (A): n=4  mean=2.5000  median=2.5000  std=1.2910  min=1.0000  max=4.0000  rel.spread=0.516

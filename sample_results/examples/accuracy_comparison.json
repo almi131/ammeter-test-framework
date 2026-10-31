@@ -1,0 +1,32 @@
+{
+  "rows": [
+    {
+      "ammeter": "offset",
+      "relative_spread": 0.0,
+      "mean": 12.0,
+      "std_dev": 0.0,
+      "error_rate": 0.0,
+      "relative_error": 0.2,
+      "rank": 1
+    },
+    {
+      "ammeter": "steady",
+      "relative_spread": 0.016329931618554464,
+      "mean": 10.0,
+      "std_dev": 0.16329931618554464,
+      "error_rate": 0.0,
+      "relative_error": 0.0,
+      "rank": 2
+    },
+    {
+      "ammeter": "noisy",
+      "relative_spread": 1.0308457158097828,
+      "mean": 13.5,
+      "std_dev": 13.916417163432069,
+      "error_rate": 0.0,
+      "relative_error": 0.35,
+      "rank": 3
+    }
+  ],
+  "report": "Ammeter comparison (lower relative spread = more consistent):\n  rank ammeter    rel.spread   mean (A)    std (A)  err rate   rel.err\n  1    offset          0.000    12.0000     0.0000      0.0%    0.2000\n  2    steady          0.016    10.0000     0.1633      0.0%    0.0000\n  3    noisy           1.031    13.5000    13.9164      0.0%    0.3500"
+}
