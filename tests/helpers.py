@@ -64,9 +64,26 @@ class ManualClock:
 
 
 def free_port():
+    """Unused 127.0.0.1 port. The socket is closed, so this is not a refused connect."""
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-        s.bind(("localhost", 0))
+        s.bind(("127.0.0.1", 0))
         return s.getsockname()[1]
+
+
+@contextlib.contextmanager
+def refusing_port():
+    """127.0.0.1 port that rejects a connect immediately on every OS.
+
+    The socket stays bound to the same address the client uses and never listens.
+    A port that nothing owns is connection-refused on Linux and macOS, but Windows
+    often waits until the client timeout instead.
+    """
+    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    sock.bind(("127.0.0.1", 0))
+    try:
+        yield sock.getsockname()[1]
+    finally:
+        sock.close()
 
 
 def serve_holding(hold, accepts=4):

@@ -6,7 +6,7 @@ from Ammeters.Circutor_Ammeter import CircutorAmmeter
 from Ammeters.Entes_Ammeter import EntesAmmeter
 from Ammeters.Greenlee_Ammeter import GreenleeAmmeter
 from Ammeters.client import AmmeterParseError
-from tests.helpers import ask, free_port, running_emulator, serve_holding, serve_once
+from tests.helpers import ask, refusing_port, running_emulator, serve_holding, serve_once
 
 
 def _one_reading(framework, cls, name, command):
@@ -41,9 +41,9 @@ def test_tc03_circutor_measurement(framework):
 
 
 def test_tc04_connection_failure(framework):
-    port = free_port()
-    fw = framework(ammeters={"down": {"host": "127.0.0.1", "port": port, "command": "X"}})
-    result = fw.run_test("down")
+    with refusing_port() as port:
+        fw = framework(ammeters={"down": {"host": "127.0.0.1", "port": port, "command": "X"}})
+        result = fw.run_test("down")
     assert result["status"] == "failed"
     assert result["metadata"]["error_count"] == len(result["samples"])
     assert all("AmmeterConnectionError" in err["error"] for err in result["metadata"]["errors"])
