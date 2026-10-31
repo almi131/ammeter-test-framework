@@ -1,4 +1,12 @@
+import sys
 import threading
+
+# Windows PowerShell defaults stdout to cp1252, which cannot encode the ohm symbol printed by Greenlee's measure_current.
+for _stream in (sys.stdout, sys.stderr):
+    try:
+        _stream.reconfigure(encoding="utf-8", errors="replace")
+    except AttributeError:
+        pass
 
 from Ammeters.base_ammeter import wait_until_accepting
 from Ammeters.Circutor_Ammeter import CircutorAmmeter

@@ -9,6 +9,13 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent
 sys.path.insert(0, str(ROOT))  # lets `Ammeters` and `src` import from any cwd
 
+# Windows PowerShell defaults stdout to cp1252, which cannot encode the ohm symbol printed by Greenlee's measure_current.
+for _stream in (sys.stdout, sys.stderr):
+    try:
+        _stream.reconfigure(encoding="utf-8", errors="replace")
+    except AttributeError:
+        pass
+
 from Ammeters.base_ammeter import wait_until_accepting  # noqa: E402
 from Ammeters.Circutor_Ammeter import CircutorAmmeter  # noqa: E402
 from Ammeters.Entes_Ammeter import EntesAmmeter  # noqa: E402
