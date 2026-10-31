@@ -54,7 +54,10 @@ class AmmeterEmulatorBase(ABC):
                     break
                 with conn:
                     print(f"Connected by {addr}")
-                    data = conn.recv(1024)
+                    try:
+                        data = conn.recv(1024)
+                    except OSError:
+                        continue  # Windows resets a client that connects and closes, such as the readiness probe
                     if data == self.get_current_command:
                         # Call the specific measure_current() method defined in subclasses
                         current = self.measure_current()

@@ -118,4 +118,4 @@ The original emulator classes, ports, and measurement formulas were kept. These 
 - `test_framework.py` was missing a `Dict` import, and the framework itself was unimplemented.
 - `logger.py` had no handler. It now writes a file and warnings to the console.
 - Imports failed outside the project directory. `run_framework.py` puts the project root on `sys.path`.
-- `base_ammeter.py` sets `SO_REUSEADDR` so a restart during `TIME_WAIT` can bind. `stop()` unblocks `accept` so tests can release the port. Measurement formulas are unchanged.
+- `base_ammeter.py` sets `SO_REUSEADDR` so a restart during `TIME_WAIT` can bind. `stop()` unblocks `accept` so tests can release the port. A client that connects and then closes makes `recv` raise `ConnectionResetError` on Windows and used to kill the emulator thread. That read is now ignored and the server keeps accepting. Measurement formulas are unchanged.
