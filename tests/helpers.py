@@ -70,20 +70,32 @@ def free_port():
         return s.getsockname()[1]
 
 
-@contextlib.contextmanager
-def refusing_port():
-    """127.0.0.1 port that rejects a connect immediately on every OS.
+def refusing_port(start=21000, attempts=64):
+    """A closed 127.0.0.1 port that refuses a connect immediately.
 
-    The socket stays bound to the same address the client uses and never listens.
-    A port that nothing owns is connection-refused on Linux and macOS, but Windows
-    often waits until the client timeout instead.
+    Nothing stays bound. Linux and macOS refuse a closed port. A socket that is
+    only bound, and not listening, is refused on Linux but times out on macOS
+    and Windows. Windows runners also drop connects to some ephemeral ports, so
+    this returns a port only after a probe sees ConnectionRefusedError.
     """
-    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    sock.bind(("127.0.0.1", 0))
-    try:
-        yield sock.getsockname()[1]
-    finally:
-        sock.close()
+    last = None
+    for port in range(start, start + attempts):
+        try:
+            with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+                s.bind(("127.0.0.1", port))
+        except OSError:
+            continue
+        probe = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        probe.settimeout(0.2)
+        try:
+            probe.connect(("127.0.0.1", port))
+        except ConnectionRefusedError:
+            return port
+        except OSError as exc:
+            last = exc
+        finally:
+            probe.close()
+    raise RuntimeError(f"no 127.0.0.1 port refused a connection ({last})")
 
 
 def serve_holding(hold, accepts=4):
