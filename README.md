@@ -176,7 +176,7 @@ python run_framework.py --plot --results-dir sample_results
 - The comparison table shows `success` (valid samples / attempts) next to precision and, when a reference is set, relative error. Rank does not use that rate. The rule is in [DESIGN.md](DESIGN.md).
 - Servers handle one client at a time.
 - Scheduling is best-effort, not hard real-time. A fast in-process reader stays within 50 ms of the schedule (`TIMING_TOLERANCE_S`). TCP latency can be larger and shows up as jitter or `late_samples`. The schedule rule is in [DESIGN.md](DESIGN.md).
-- Windows and macOS are now verified by the GitHub Actions workflow in [`.github/workflows/tests.yml`](https://github.com/almi131/ammeter-test-framework/actions/workflows/tests.yml). A green workflow run is the proof.
+- Windows and macOS are verified by the GitHub Actions workflow in [`.github/workflows/tests.yml`](https://github.com/almi131/ammeter-test-framework/actions/workflows/tests.yml); the latest run on all three OSes is green.
 
 ## Cross-platform verification
 
