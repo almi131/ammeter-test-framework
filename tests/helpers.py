@@ -1,6 +1,8 @@
 """Shared test data and helpers."""
 import contextlib
 import socket
+import struct
+import sys
 import threading
 import time
 
@@ -70,32 +72,48 @@ def free_port():
         return s.getsockname()[1]
 
 
-def refusing_port(start=21000, attempts=64):
-    """A closed 127.0.0.1 port that refuses a connect immediately.
+def _abort(conn):
+    """Close so the peer sees a reset, not a normal end of data."""
+    pack = "HH" if sys.platform == "win32" else "ii"
+    conn.setsockopt(socket.SOL_SOCKET, socket.SO_LINGER, struct.pack(pack, 1, 0))
+    conn.close()
 
-    Nothing stays bound. Linux and macOS refuse a closed port. A socket that is
-    only bound, and not listening, is refused on Linux but times out on macOS
-    and Windows. Windows runners also drop connects to some ephemeral ports, so
-    this returns a port only after a probe sees ConnectionRefusedError.
+
+@contextlib.contextmanager
+def refusing_port():
+    """127.0.0.1 peer that resets every accepted connection.
+
+    Linux and macOS refuse a closed port. The Windows runner drops those
+    connects until the timeout, so a probe never sees ConnectionRefusedError.
+    An abortive close is a connection error on all three, and the client is
+    not left waiting on a silent socket.
     """
-    last = None
-    for port in range(start, start + attempts):
-        try:
-            with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-                s.bind(("127.0.0.1", port))
-        except OSError:
-            continue
-        probe = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        probe.settimeout(0.2)
-        try:
-            probe.connect(("127.0.0.1", port))
-        except ConnectionRefusedError:
-            return port
-        except OSError as exc:
-            last = exc
-        finally:
-            probe.close()
-    raise RuntimeError(f"no 127.0.0.1 port refused a connection ({last})")
+    srv = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    srv.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+    srv.bind(("127.0.0.1", 0))
+    srv.listen(16)
+    srv.settimeout(0.2)
+    stop = threading.Event()
+
+    def run():
+        while not stop.is_set():
+            try:
+                conn, _ = srv.accept()
+            except socket.timeout:
+                continue
+            except OSError:
+                break
+            try:
+                _abort(conn)
+            except OSError:
+                conn.close()
+        srv.close()
+
+    threading.Thread(target=run, daemon=True).start()
+    try:
+        yield srv.getsockname()[1]
+    finally:
+        stop.set()
 
 
 def serve_holding(hold, accepts=4):

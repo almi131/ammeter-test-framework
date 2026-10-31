@@ -41,9 +41,9 @@ def test_tc03_circutor_measurement(framework):
 
 
 def test_tc04_connection_failure(framework):
-    port = refusing_port()
-    fw = framework(ammeters={"down": {"host": "127.0.0.1", "port": port, "command": "X"}})
-    result = fw.run_test("down")
+    with refusing_port() as port:
+        fw = framework(ammeters={"down": {"host": "127.0.0.1", "port": port, "command": "X"}})
+        result = fw.run_test("down")
     assert result["status"] == "failed"
     assert result["metadata"]["error_count"] == len(result["samples"])
     assert all("AmmeterConnectionError" in err["error"] for err in result["metadata"]["errors"])
