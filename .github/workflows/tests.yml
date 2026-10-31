@@ -27,5 +27,15 @@ jobs:
         run: python -m pytest -q
       - name: Smoke main.py
         run: python main.py
+      - name: Dump emulator debug log on failure
+        if: always()
+        shell: bash
+        run: |
+          if [ -f emulator-debug.log ]; then
+            echo "----- emulator-debug.log -----"
+            cat emulator-debug.log
+          else
+            echo "emulator-debug.log not written"
+          fi
       - name: Smoke examples/run_tests.py
         run: python examples/run_tests.py
