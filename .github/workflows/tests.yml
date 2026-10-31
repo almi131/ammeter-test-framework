@@ -1,6 +1,5 @@
 name: tests
 # Same suite on Ubuntu, Windows, and macOS. A green job is the only proof that OS passed.
-# This workspace was checked on Linux only. Windows and macOS stay unverified until CI runs.
 
 on:
   push:

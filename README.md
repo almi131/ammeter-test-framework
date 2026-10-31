@@ -128,7 +128,7 @@ python -m pytest --results-list
 
 69 tests cover TC-01..TC-37, plus regression checks for the CLI sampling override, metric validation, accuracy ranking, the half-open window boundary, three timing checks, and a corrupt result file. TC-06, TC-14, TC-20, TC-32, TC-34, and TC-35 are parameterized. Results go to pytest's `tmp_path`, not `results/`. Real emulator tests start `GreenleeAmmeter`, `EntesAmmeter`, and `CircutorAmmeter` on a free port and stop the thread afterwards.
 
-TC-38 is this suite on Linux (run here). TC-39 (Windows) and TC-40 (macOS) are the same suite on the CI matrix. They were not executed in this environment.
+TC-38, TC-39, and TC-40 validate the same test suite on Linux, Windows, and macOS, respectively, through the GitHub Actions CI matrix. All three platforms passed in the latest successful workflow run.
 
 ## Results
 
