@@ -34,6 +34,8 @@ Samples are scheduled at `t_i = i / f` inside the half-open window `[0, D)`. The
 
 Give at least two of count, duration, and frequency (`f = N / D`, or `D = N / f`). All three must satisfy `count == ceil(D * f)`.
 
+The boundary rule is pinned by `test_half_open_window_excludes_the_end_boundary` in `tests/test_sampling.py`, parametrized over `0.3s @ 10 Hz`, `1 s @ 4 Hz`, and `0.7s @ 10 Hz`. Each case asserts the exact schedule, `scheduled[-1] < D`, and `len(samples) == ceil(D * f)`.
+
 The schedule is absolute (`t0 + i/f` on `time.perf_counter`, coarse sleep plus a short spin) so a slow read does not shift later samples. Tests may inject a clock. If that callable has `advance_to(deadline)`, the scheduler jumps there instead of sleeping. Production does not pass a clock.
 
 ## Timing tolerance

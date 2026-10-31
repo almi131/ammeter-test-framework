@@ -128,6 +128,8 @@ python -m pytest --results-list
 
 69 tests cover TC-01..TC-37, plus regression checks for the CLI sampling override, metric validation, accuracy ranking, the half-open window boundary, three timing checks, and a corrupt result file. TC-06, TC-14, TC-20, TC-32, TC-34, and TC-35 are parameterized. Results go to pytest's `tmp_path`, not `results/`. Real emulator tests start `GreenleeAmmeter`, `EntesAmmeter`, and `CircutorAmmeter` on a free port and stop the thread afterwards.
 
+The half-open window `[0, D)` is checked by `test_half_open_window_excludes_the_end_boundary` in `tests/test_sampling.py`, parametrized over `0.3s @ 10 Hz`, `1 s @ 4 Hz`, and `0.7s @ 10 Hz`. Each case asserts the exact schedule, that the last timestamp is strictly less than `D`, and that `len(samples) == ceil(D * f)`. `test_tc12_sampling_frequency` adds the gap-based check with `measurements_count=4`.
+
 TC-38, TC-39, and TC-40 validate the same test suite on Linux, Windows, and macOS, respectively, through the GitHub Actions CI matrix. All three platforms passed in the latest successful workflow run.
 
 ## Results
