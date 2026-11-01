@@ -23,7 +23,7 @@ jobs:
           python -m pip install -r requirements.txt
           python -m pip install -r requirements-plot.txt
       - name: Run tests
-        run: python -m pytest -q
+        run: python -m pytest -v -ra
       - name: Smoke main.py
         run: python main.py
       - name: Smoke examples/run_tests.py
