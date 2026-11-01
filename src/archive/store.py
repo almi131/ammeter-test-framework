@@ -4,7 +4,7 @@ import platform
 import re
 import subprocess
 import uuid
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Callable, Dict, List, Optional
 
@@ -100,7 +100,7 @@ class RunArchive:
         path = self.path_for(run_id)
         if path.exists():
             raise FileExistsError(f"Run '{run_id}' is already archived")
-        now = datetime.now(timezone.utc)
+        now = self._monotonic_now()
         entry = {
             "run_id": run_id,
             "metadata": {
@@ -147,6 +147,18 @@ class RunArchive:
 
     def compare(self, run_a: str, run_b: str) -> Dict:
         return compare_runs(self.load(run_a), self.load(run_b))
+
+    def _monotonic_now(self) -> datetime:
+        # Guarantee strictly-increasing metadata.timestamp per archive dir so `latest` is deterministic
+        # even on coarse-tick clocks (e.g. Windows ~15 ms).
+        now = datetime.now(timezone.utc)
+        latest = max((r["timestamp"] for r in self.list()), default="")
+        if latest and now.isoformat() <= latest:
+            try:
+                return datetime.fromisoformat(latest) + timedelta(microseconds=1)
+            except ValueError:
+                pass
+        return now
 
     @staticmethod
     def _read(path: Path) -> Dict:
