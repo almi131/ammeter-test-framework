@@ -183,7 +183,14 @@ python -m src.archive --results-dir results/example compare <run_a> latest
 
 `--results-dir` defaults to `results/runs`. In Python: `fw.archive.list()`, `fw.archive.load("latest")`, `fw.archive.compare(a, b)`. Compare reports each ammeter's status change (`regressed`, `improved`, `unchanged`), metric deltas with percent change, and ammeters present in only one run. Tests: `tests/test_archive.py`.
 
-Sample output: [`sample_results/`](sample_results/) (real emulator run, plot, and `archive/` with the `list` and `compare` output). Short deterministic cases, produced by the framework with fake readers: [`sample_results/examples/`](sample_results/examples/).
+Sample output: [`sample_results/`](sample_results/) (real emulator run, plot, and `archive/` with the `list` and `compare` output). Short deterministic cases, produced by the framework with fake readers: [`sample_results/examples/`](sample_results/examples/):
+
+- `partial_failure.json` — a run where some meters fail mid-sampling.
+- `complete_failure.json` — a run where every meter fails.
+- `accuracy_comparison.json` — cross-meter accuracy against a known `reference_current_a`.
+- `historical_comparison.json` — output of comparing two archived runs.
+- `stats_report.txt` — the human-readable `format_report` output, with `ci95` and `outliers`.
+- `visualization.png` — the plot output.
 
 ## Visualization
 
