@@ -108,6 +108,8 @@ def main(argv=None) -> int:
         else:
             print(f"  saved    : {fw.store.path_for(r['run_id'])}\n")
     print(format_ammeter_comparison(fw.compare_ammeters(results)))
+    if fw.last_archive_id:
+        print(f"\nArchived run: {fw.last_archive_id}  (python -m src.archive list)")
 
     viz = (fw.config.get("analysis") or {}).get("visualization") or {}
     if args.plot and viz.get("enabled", True):

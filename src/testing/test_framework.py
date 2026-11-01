@@ -14,6 +14,7 @@ from typing import Callable, Dict, List, Optional, Tuple
 
 from Ammeters.client import (
     DEFAULT_TIMEOUT, AmmeterConnectionError, AmmeterTimeoutError, request_current_from_ammeter)
+from src.archive import RunArchive, new_run_id
 from src.utils.config import ConfigError, check_name, load_config, section
 from src.utils.logger import TestLogger
 
@@ -348,6 +349,8 @@ class AmmeterTestFramework:
         rm = section(config, "result_management")
         self.store = ResultStore(results_dir or rm.get("results_dir") or DEFAULT_RESULTS_DIR)
         self.logger = TestLogger("framework", log_dir=str(self.store.directory / "logs"))
+        self.archive = RunArchive(self.store.directory / "archive")
+        self.last_archive_id: Optional[str] = None  # id of the most recent archived run
 
     # -- registry
     def _register_spec(self, spec: AmmeterSpec) -> None:
@@ -377,6 +380,12 @@ class AmmeterTestFramework:
         return SamplingPlan.from_config(sampling if sampling is not None else self.default_sampling)
 
     def run_test(self, ammeter_type: str, sampling: Optional[Dict] = None, save: bool = True) -> Dict:
+        result = self._run_one(ammeter_type, sampling, save)
+        if save:
+            self._archive_run({ammeter_type: result}, sampling)
+        return result
+
+    def _run_one(self, ammeter_type: str, sampling: Optional[Dict], save: bool) -> Dict:
         if ammeter_type not in self._readers:
             raise ConfigError(f"Unknown ammeter '{ammeter_type}'; available: {self.ammeter_names}")
         plan = self.plan_for(sampling)
@@ -486,7 +495,28 @@ class AmmeterTestFramework:
         if unknown:
             raise ConfigError(f"Unknown ammeter(s) {unknown}; available: {self.ammeter_names}")
         self.plan_for(sampling)  # fail fast on bad sampling config
-        return {n: self.run_test(n, sampling) for n in names}
+        results = {n: self._run_one(n, sampling, True) for n in names}
+        self._archive_run(results, sampling)
+        return results
+
+    def _archive_run(self, results: Dict[str, Dict], sampling: Optional[Dict]) -> None:
+        """Archive one run with its config; an archive failure never loses the results."""
+        config = {
+            "sampling": self.plan_for(sampling).to_dict(),
+            "client_timeout_seconds": self.timeout,
+            "reference_current_a": self.reference_current_a,
+            "error_simulation": self.error_simulation,
+            "metrics": self.metrics,
+            "ammeters": {n: self._meta_for(n) for n in results},
+        }
+        run_id = new_run_id()
+        try:
+            self.archive.record(results, run_id=run_id, config=config)
+        except OSError as e:
+            self.logger.error(f"[{run_id}] could not archive run: {e}")
+            return
+        self.last_archive_id = run_id
+        self.logger.info(f"[{run_id}] archived: {', '.join(results)}")
 
     # -- history
     def load_result(self, run_id: str) -> Dict:

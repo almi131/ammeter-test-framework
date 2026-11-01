@@ -68,6 +68,47 @@ Fields: `run_id`, `ammeter`, `status` (`ok` / `partial` / `failed`), `metadata` 
 
 If saving raises `OSError`, the result is returned with `metadata.save_error`. `compare_runs` sets `mean_delta_pct` against the first run only when the ammeter matches and that first mean is not zero. Otherwise it is null. Corrupt JSON raises `ValueError`. Run ids containing `..` or a path separator are rejected.
 
+## Result management
+
+`src/archive/` adds a run-level archive on top of the per-ammeter files in Result storage. A run is one `run_all` call, or one saved `run_test`. `AmmeterTestFramework` calls it after the measurements, so `run_framework.py` and `examples/run_tests.py` archive every run without extra code.
+
+### Run id
+
+`<UTC %Y%m%dT%H%M%SZ>_<uuid8>`. The timestamp makes ids sort by time and readable. The short uuid keeps two runs in the same second apart. Ids may only contain letters, digits, `_` and `-`, so an id can never become a path outside the archive. Recording an id that already exists raises `FileExistsError`.
+
+### Storage layout
+
+`<results_dir>/archive/<run_id>.json`, one file per run, written to a `.tmp` file and then `replace`d. It sits under `results/`, so git ignores it. The per-ammeter files stay where they were. The archive reads only its own `*.json` files, and the existing `ResultStore.list` does not descend into `archive/`.
+
+### Metadata schema
+
+- `run_id`
+- `metadata.timestamp` (UTC, ISO 8601), `os`, `platform`, `python`
+- `metadata.git_commit`: HEAD hash from `git rev-parse` in the project root, or null without git, outside a repo, or after a 5 s timeout.
+- `metadata.config`: effective sampling plan, client timeout, reference current, error simulation, metrics, and host/port/command of each ammeter run.
+- `metadata.summary`: `ammeters`, `ok`, `partial`, `failed`, `samples`, `valid_samples`, `errors`.
+- `results.<ammeter>`: `result_run_id` (the full per-ammeter file), `ammeter`, `status`, `start_time`, `stats`, `timing`, `samples` (a count), `errors`.
+
+### Retrieval
+
+`RunArchive.list()` returns summaries oldest first. `load(run_id)` returns the full record, and `load("latest")` the newest by timestamp then id. `compare(a, b)` loads two runs and diffs them. The same three actions are the CLI `python -m src.archive [--results-dir DIR] list | show RUN | compare RUN_A RUN_B`, where either RUN may be `latest`. `--results-dir` defaults to `results/runs`. `fw.last_archive_id` holds the id of the latest run archived by that framework object.
+
+### Comparison
+
+`compare_runs(a, b)` reports differences of `b` relative to `a`, for ammeters present in both runs. Each ammeter gets a status change and the numeric metrics that differ. Status ranks `ok` < `partial` < `failed`. A higher rank in `b` is `regressed`, a lower one `improved`, the same one `unchanged`. A metric covers numeric `stats.*` and `timing.*` values plus `errors` and carries `a`, `b`, `delta`, and `delta_pct`. `delta_pct` is null when `a` is 0. A metric missing from one side is skipped. Ammeters in only one run are listed in `only_in_a` and `only_in_b`. Runs of different configs are still comparable, and the config is in each record for the reader to check.
+
+### Failure handling
+
+An archive write error (`OSError`) is logged and the results are still returned, as with `metadata.save_error`. `last_archive_id` stays unchanged. A corrupt or foreign file raises `ValueError` on `load`, and `list` skips it. An unknown id raises `FileNotFoundError`. The CLI turns these into a message on stderr and exit code 2.
+
+### Rationale and trade-offs
+
+- A separate run-level record is needed because a run covers several ammeters and the per-ammeter files do not tie them together.
+- Raw samples are not copied. That keeps archive files small and avoids two copies that could disagree. The cost is that a sample-level diff needs the linked per-ammeter file.
+- One JSON file per run needs no database, works the same on every OS, and a failed write can corrupt at most one temporary file. Listing reads every file, which is fine for hundreds of runs but not for very large histories.
+- The git commit is best-effort. A dirty working tree is not recorded.
+- Ordering comes from the timestamp in the record and not from file times, which copying or checkout can change.
+
 ## Accuracy and relative spread
 
 The emulators draw random currents and have no true reference. `relative_spread` is precision (how tight the samples are). It is not accuracy.

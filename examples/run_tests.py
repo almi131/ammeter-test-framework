@@ -27,6 +27,7 @@ def main() -> int:
         print(format_report(result))
         print(f"  saved    : {fw.store.path_for(result['run_id'])}\n")
     print(format_ammeter_comparison(fw.compare_ammeters(results)))
+    print(f"\nArchived run: {fw.last_archive_id}")
     return 1 if any(result["status"] == "failed" for result in results.values()) else 0
 
 
