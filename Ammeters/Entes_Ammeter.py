@@ -12,5 +12,5 @@ class EntesAmmeter(AmmeterEmulatorBase):
         magnetic_field = generate_random_float(0.01, 0.1)  # Magnetic field strength (0.01T - 0.1T)
         calibration_factor = generate_random_float(500, 2000)  # Calibration factor (500 - 2000)
         current = magnetic_field * calibration_factor
-        print(f"ENTES Ammeter - Magnetic Field: {magnetic_field}T, Calibration Factor: {calibration_factor}, Current: {current}A")
+        self.log(f"ENTES Ammeter - Magnetic Field: {magnetic_field}T, Calibration Factor: {calibration_factor}, Current: {current}A")
         return current

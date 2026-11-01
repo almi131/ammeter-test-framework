@@ -3,7 +3,8 @@ import pytest
 from src.utils.config import ConfigError
 
 _RESULT_KEYS = {"run_id", "ammeter", "status", "metadata", "stats", "timing", "samples"}
-_STAT_KEYS = {"count", "mean", "median", "std_dev", "min", "max", "relative_spread"}
+_STAT_KEYS = {"count", "mean", "median", "std_dev", "min", "max", "relative_spread",
+              "ci95_low", "ci95_high", "outliers"}
 
 
 _EXPECTED = {"greenlee": 1.0, "entes": 2.0, "circutor": 3.0}

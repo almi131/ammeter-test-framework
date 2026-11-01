@@ -3,14 +3,14 @@ import statistics
 import pytest
 
 from Ammeters.client import AmmeterTimeoutError
-from src.testing.test_framework import ConfigError, compute_stats
+from src.testing.test_framework import ConfigError, compute_stats, count_outliers
 
 
 def test_metric_names_are_checked_before_the_values():
     with pytest.raises(ConfigError, match="Unknown statistical metrics"):
         compute_stats([], ["bad"])
     assert compute_stats([1.0, 2.0], []) == {"count": 2}
-    assert set(compute_stats([1.0, 2.0], ["min"])) == {"count", "min", "relative_spread"}
+    assert set(compute_stats([1.0, 2.0], ["min"])) == {"count", "min", "relative_spread", "ci95_low", "ci95_high", "outliers"}
 
 
 def test_tc16_mean_calculation():
@@ -69,3 +69,15 @@ def test_tc20_statistical_edge_cases(kind, framework):
         assert all(sample["value"] == 2.0 for sample in valid)
         assert result["stats"]["count"] == len(valid)
         assert result["stats"]["mean"] == 2.0
+
+
+def test_ci95_and_outliers():
+    stats = compute_stats([1.0, 2.0, 3.0, 4.0, 5.0])
+    # t(0.975, df=4) = 2.776, std = sqrt(2.5), n = 5
+    half = 2.776 * 2.5 ** 0.5 / 5 ** 0.5
+    assert stats["ci95_low"] == pytest.approx(3.0 - half)
+    assert stats["ci95_high"] == pytest.approx(3.0 + half)
+    assert stats["outliers"] == 0
+    assert count_outliers([1.0, 1.1, 0.9, 1.0, 1.05, 50.0]) == 1
+    one = compute_stats([2.0])
+    assert one["ci95_low"] is None and one["ci95_high"] is None and one["outliers"] == 0

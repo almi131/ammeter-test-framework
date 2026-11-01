@@ -1,32 +1,44 @@
 {
   "rows": [
     {
-      "ammeter": "offset",
-      "relative_spread": 0.0,
-      "mean": 12.0,
-      "std_dev": 0.0,
-      "error_rate": 0.0,
-      "relative_error": 0.2,
-      "rank": 1
-    },
-    {
       "ammeter": "steady",
       "relative_spread": 0.016329931618554464,
       "mean": 10.0,
       "std_dev": 0.16329931618554464,
+      "ci95_rel": 0.02598092120512021,
+      "outliers": 0,
       "error_rate": 0.0,
+      "success_rate": 1.0,
       "relative_error": 0.0,
-      "rank": 2
+      "rank": 1,
+      "ranked_by": "abs_relative_error"
+    },
+    {
+      "ammeter": "offset",
+      "relative_spread": 0.0,
+      "mean": 12.0,
+      "std_dev": 0.0,
+      "ci95_rel": 0.0,
+      "outliers": 0,
+      "error_rate": 0.0,
+      "success_rate": 1.0,
+      "relative_error": 0.2,
+      "rank": 2,
+      "ranked_by": "abs_relative_error"
     },
     {
       "ammeter": "noisy",
-      "relative_spread": 1.0308457158097828,
+      "relative_spread": 1.0623024574962445,
       "mean": 13.5,
-      "std_dev": 13.916417163432069,
+      "std_dev": 14.341083176199302,
+      "ci95_rel": 1.690123209876525,
+      "outliers": 0,
       "error_rate": 0.0,
+      "success_rate": 1.0,
       "relative_error": 0.35,
-      "rank": 3
+      "rank": 3,
+      "ranked_by": "abs_relative_error"
     }
   ],
-  "report": "Ammeter comparison (lower relative spread = more consistent):\n  rank ammeter    rel.spread   mean (A)    std (A)  err rate   rel.err\n  1    offset          0.000    12.0000     0.0000      0.0%    0.2000\n  2    steady          0.016    10.0000     0.1633      0.0%    0.0000\n  3    noisy           1.031    13.5000    13.9164      0.0%    0.3500"
+  "report": "Ammeter comparison (ranked by |relative error|; lower is closer to the reference):\n  rank ammeter    rel.spread  ci95 +/-% outliers   success   rel.err   mean (A)    std (A)  err rate\n  1    steady          0.016        2.6        0    100.0%    0.0000    10.0000     0.1633      0.0%\n  2    offset          0.000        0.0        0    100.0%    0.2000    12.0000     0.0000      0.0%\n  3    noisy           1.062      169.0        0    100.0%    0.3500    13.5000    14.3411      0.0%\nWinners:\n  most precise                : offset (relative_spread=0.000)\n  most accurate               : steady (|rel.error|=0.000)\n  most reliable communication : steady, offset, noisy (success_rate=100.0%)"
 }

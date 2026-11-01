@@ -1,11 +1,11 @@
 {
-  "run_id": "meter_20261030T223448_1f67b4e3",
+  "run_id": "meter_20261101T050034_09965e2b",
   "ammeter": "meter",
   "status": "partial",
   "metadata": {
-    "start_time": "2026-10-30T22:34:48.065393+00:00",
-    "end_time": "2026-10-30T22:34:48.065647+00:00",
-    "elapsed_s": 0.000254,
+    "start_time": "2026-11-01T05:00:34.131582+00:00",
+    "end_time": "2026-11-01T05:00:34.431811+00:00",
+    "elapsed_s": 0.300229,
     "config": {
       "sampling": {
         "measurements_count": 4,
@@ -13,7 +13,7 @@
         "sampling_frequency_hz": 10.0,
         "last_sample_s": 0.3
       },
-      "client_timeout_seconds": 1.0
+      "client_timeout_seconds": 3.0
     },
     "error_count": 2,
     "errors": [
@@ -27,7 +27,7 @@
       }
     ],
     "python": "3.12.3",
-    "platform": "Linux-6.17.0-1032-oem-x86_64-with-glibc2.39"
+    "platform": "Linux-6.17.0-1033-oem-x86_64-with-glibc2.39"
   },
   "stats": {
     "count": 2,
@@ -36,45 +36,48 @@
     "std_dev": 1.4142135623730951,
     "min": 2.0,
     "max": 4.0,
-    "relative_spread": 0.47140452079103173
+    "relative_spread": 0.47140452079103173,
+    "ci95_low": -9.706,
+    "ci95_high": 15.706,
+    "outliers": 0
   },
   "timing": {
-    "mean_jitter_ms": 0.0,
-    "max_abs_jitter_ms": 0.0,
+    "mean_jitter_ms": 0.005,
+    "max_abs_jitter_ms": 0.007,
     "late_samples": 0
   },
   "samples": [
     {
       "index": 0,
       "scheduled_s": 0.0,
-      "actual_s": 0.0,
+      "actual_s": 3e-06,
       "value": null,
       "error": "AmmeterConnectionError: down",
-      "latency_ms": 0.0
+      "latency_ms": 0.05
     },
     {
       "index": 1,
       "scheduled_s": 0.1,
-      "actual_s": 0.1,
+      "actual_s": 0.100007,
       "value": 2.0,
       "error": null,
-      "latency_ms": 0.0
+      "latency_ms": 0.045
     },
     {
       "index": 2,
       "scheduled_s": 0.2,
-      "actual_s": 0.2,
+      "actual_s": 0.200005,
       "value": null,
       "error": "AmmeterConnectionError: down",
-      "latency_ms": 0.0
+      "latency_ms": 0.354
     },
     {
       "index": 3,
       "scheduled_s": 0.3,
-      "actual_s": 0.3,
+      "actual_s": 0.300005,
       "value": 4.0,
       "error": null,
-      "latency_ms": 0.0
+      "latency_ms": 0.045
     }
   ]
 }

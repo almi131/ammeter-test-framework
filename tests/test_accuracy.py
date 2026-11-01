@@ -15,7 +15,8 @@ def test_tc28_compare_ammeter_measurements(framework):
     rows = fw.compare_ammeters(results)
     assert {row["ammeter"] for row in rows} == {"greenlee", "entes", "circutor"}
     for row in rows:
-        assert {"mean", "std_dev", "relative_spread", "rank", "error_rate", "success_rate"} <= set(row)
+        assert {"mean", "std_dev", "relative_spread", "rank", "error_rate", "success_rate",
+                "ci95_rel", "outliers"} <= set(row)
         assert row["success_rate"] == 1.0
     report = format_ammeter_comparison(rows)
     assert "greenlee" in report and "entes" in report and "circutor" in report

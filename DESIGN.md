@@ -14,11 +14,11 @@ Every bonus in the exam specification is implemented:
 
 ## Cross-platform CI
 
-One workflow at `.github/workflows/tests.yml` runs a matrix of `ubuntu-latest`, `windows-latest`, and `macos-latest` with Python 3.12. Each job installs `requirements.txt` and `requirements-plot.txt`, then runs `python -m pytest -q`, `python main.py`, and `python examples/run_tests.py` in that order. `fail-fast: false` so each OS reports independently. The matrix exists because scheduling and socket behavior differ per OS: the Windows PowerShell cp1252 default encoding on the Greenlee ohm-sign print and the Windows connection-refused handshake that TC-04 drives through `refusing_port` are both covered in Bug fixes. The macOS runner can jitter past the local 50 ms timing SLA, so TC-15 loosens its bound when the `CI` env var is set.
+One workflow at `.github/workflows/tests.yml` runs a matrix of `ubuntu-latest`, `windows-latest`, and `macos-latest` with Python 3.12. Each job installs `requirements.txt` and `requirements-plot.txt`, then runs `python -m pytest -v -ra`, `python main.py`, and `python examples/run_tests.py` in that order. `fail-fast: false` so each OS reports independently. The matrix exists because scheduling and socket behavior differ per OS: the Windows PowerShell cp1252 default encoding on the Greenlee ohm-sign print and the Windows connection-refused handshake that TC-04 drives through `refusing_port` are both covered in Bug fixes. The macOS runner can jitter past the local 50 ms timing SLA, so TC-15 loosens its bound when the `CI` env var is set.
 
 ## Architecture
 
-Emulators are TCP servers. Each accepts one client, so meters are sampled one after another. `client.py` turns one exchange into a float or a typed error: it reads until the server closes the socket and rejects a reply over 1024 bytes. `stop()` on the base class releases the port. `main.py` and `run_framework.py` start the servers on daemon threads and call `wait_until_accepting` in `base_ammeter.py` instead of sleeping a fixed time. `main.py` does not call `stop()`.
+Emulators are TCP servers. Each accepts one client, so meters are sampled one after another. `client.py` turns one exchange into a float or a typed error: it reads until the server closes the socket and rejects a reply over 1024 bytes. `stop()` on the base class releases the port. `main.py` and `run_framework.py` start the servers on daemon threads and call `wait_until_accepting` in `base_ammeter.py` instead of sleeping a fixed time. `main.py` does not call `stop()`. Emulators are silent unless `verbose=True` or `AMMETER_VERBOSE=1`; `run_framework.py --verbose` and `main.py` turn them on.
 
 A relative results directory is resolved from the project root (`PROJECT_ROOT`), not from the shell's current directory.
 
@@ -48,7 +48,7 @@ The short busy-wait improves precision on a normal operating system. It is best-
 
 Mean, median, sample standard deviation (n − 1, `statistics.stdev`), min, and max. One value has std 0. An empty set returns `{"count": 0}` and no other metrics. Median of an even count is the average of the two middle values.
 
-`relative_spread = std / |mean|`, or null when the mean is 0. Failed samples, including NaN and infinity, are stored and excluded from the statistics.
+`relative_spread = std / |mean|`, or null when the mean is 0. `ci95_low` and `ci95_high` are the 95% confidence interval of the mean, `mean ± t * std / sqrt(n)`, with Student t values for up to 31 samples (hard-coded table) and 1.96 beyond, so it needs no extra library. They are null for one sample. `outliers` counts values outside the Tukey fences `[Q1 − 1.5 IQR, Q3 + 1.5 IQR]` (0 below 4 samples). `compare_ammeters` rows carry `ci95_rel` (half-width / |mean|) and `outliers`, and the comparison table shows both. They are display-only like `success_rate`; the rank and winners do not use them. Meters work in very different ranges, so only dimensionless figures (`relative_spread`, `ci95_rel`, `outliers`) are comparable across meters. Failed samples, including NaN and infinity, are stored and excluded from the statistics.
 
 ## Errors
 

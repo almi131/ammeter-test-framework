@@ -18,8 +18,8 @@ Design decisions, the assignment bonuses, and bug-fix explanations: [DESIGN.md](
 - `src/archive/` — run archive: unique run id, metadata, list/load/compare, CLI (`python -m src.archive`).
 - `src/testing/visualization.py` — optional matplotlib plots.
 - `src/utils/` — YAML loader, logger.
-- `tests/` — pytest suite, one module per area of the test plan (TC-01..TC-37).
-- `sample_results/` — real successful run (20 samples at 10 Hz) and `comparison.png`.
+- `tests/` — pytest suite, one module per area. `docs/TEST_PLAN.md` maps TC-01..TC-40 to the tests.
+- `sample_results/` — two real runs (20 and 10 samples at 10 Hz), `comparison.png`, the run archive (`archive/`), and the log.
 - `sample_results/examples/` — deterministic partial failure, complete failure, stats, comparisons, plot.
 - `examples/run_tests.py` — short run of all three meters (3 samples at 10 Hz). From the project root: `python examples/run_tests.py`.
 - `.github/workflows/tests.yml` — Ubuntu, Windows, and macOS. Each job runs pytest, then `main.py`, then `examples/run_tests.py`.
@@ -58,6 +58,8 @@ python run_framework.py --count 20 --frequency 10 --plot --results-dir sample_re
 python run_framework.py --ammeters entes circutor --duration 5 --frequency 4
 python run_framework.py --no-emulators
 ```
+
+Emulators print nothing by default. `--verbose` (or `AMMETER_VERBOSE=1`) shows their output; `main.py` always shows it.
 
 Options: `--config`, `--ammeters`, `--count`, `--duration`, `--frequency`, `--results-dir`, `--no-emulators`, `--plot`, `--verbose`. A sampling flag overrides that one field and keeps the others from the config. If the mix disagrees, fields you did not pass are recalculated. Passing all three with values that disagree is still an error. `--count 3` with the default 10 Hz config takes 3 samples at 10 Hz (duration becomes 0.3 s).
 
@@ -127,11 +129,11 @@ python -m pytest --results-list
 
 `pytest` prints one progress line per file. `pytest -v` prints each test name and `PASSED` or `FAILED`. `--results-list` adds the same names plus the error line for a failure and the passed/failed totals.
 
-95 tests cover TC-01..TC-37, plus the run archive tests (`tests/test_archive.py`), and regression checks for the CLI sampling override, metric validation, accuracy ranking, the half-open window boundary, three timing checks, and a corrupt result file. TC-06, TC-14, TC-20, TC-32, TC-34, and TC-35 are parameterized. Results go to pytest's `tmp_path`, not `results/`. Real emulator tests start `GreenleeAmmeter`, `EntesAmmeter`, and `CircutorAmmeter` on a free port and stop the thread afterwards.
+100 tests cover TC-01..TC-40 (see [docs/TEST_PLAN.md](docs/TEST_PLAN.md)), plus the run archive tests (`tests/test_archive.py`), and regression checks for the CLI sampling override, metric validation, accuracy ranking, the half-open window boundary, three timing checks, and a corrupt result file. TC-06, TC-14, TC-20, TC-32, TC-34, and TC-35 are parameterized. Results go to pytest's `tmp_path`, not `results/`. Real emulator tests start `GreenleeAmmeter`, `EntesAmmeter`, and `CircutorAmmeter` on a free port and stop the thread afterwards.
 
 The half-open window `[0, D)` is checked by `test_half_open_window_excludes_the_end_boundary` in `tests/test_sampling.py`, parametrized over `0.3s @ 10 Hz`, `1 s @ 4 Hz`, and `0.7s @ 10 Hz`. Each case asserts the exact schedule, that the last timestamp is strictly less than `D`, and that `len(samples) == ceil(D * f)`. `test_tc12_sampling_frequency` adds the gap-based check with `measurements_count=4`.
 
-TC-38, TC-39, and TC-40 cover cross-platform verification on Ubuntu, Windows, and macOS. The complete pytest suite and application smoke tests passed on all three platforms through GitHub Actions CI.
+TC-38, TC-39, and TC-40 (`tests/test_cross_platform.py`) check that the CI workflow runs the suite and both smoke commands on Ubuntu, Windows, and macOS. The per-OS result is the GitHub Actions run history (badge above).
 
 ## Results
 
@@ -162,6 +164,13 @@ print(format_run_comparison(history))
 
 `mean_delta_pct` is the change from the first run, and only when both runs are the same ammeter and that first mean is not zero. Otherwise the field is null.
 
+### Which result store to use
+
+- `ResultStore` (`fw.load_result`, `fw.list_results`, `fw.compare_runs`): one file per ammeter run, with every raw sample. Use it to inspect or compare the samples of one meter.
+- `RunArchive` (`fw.archive`, `python -m src.archive`): one compact record per `run_all`, with metadata (OS, Python, git commit, config) and the stats of every meter. Use it to see history across whole runs and compare run A with run B.
+
+Both are written automatically. The archive links to the per-ammeter files through `result_run_id`.
+
 ### Run archive
 
 Every `run_all` (so `run_framework.py` and `examples/run_tests.py`) and every saved `run_test` also writes one archive file, `<results_dir>/archive/<run_id>.json` (gitignored with `results/`). The run id is `<UTC timestamp>_<uuid8>`. It holds metadata (timestamp, OS/platform, Python, git commit or null, sampling and ammeter config, summary counts) and a compact result per ammeter (stats, timing, error count, and `result_run_id` of the full per-ammeter file). An archive write failure is logged and does not lose the results.
@@ -174,7 +183,7 @@ python -m src.archive --results-dir results/example compare <run_a> latest
 
 `--results-dir` defaults to `results/runs`. In Python: `fw.archive.list()`, `fw.archive.load("latest")`, `fw.archive.compare(a, b)`. Compare reports each ammeter's status change (`regressed`, `improved`, `unchanged`), metric deltas with percent change, and ammeters present in only one run. Tests: `tests/test_archive.py`.
 
-Sample output: [`sample_results/`](sample_results/) (real emulator run and plot). Short deterministic cases, produced by the framework with fake readers: [`sample_results/examples/`](sample_results/examples/).
+Sample output: [`sample_results/`](sample_results/) (real emulator run, plot, and `archive/` with the `list` and `compare` output). Short deterministic cases, produced by the framework with fake readers: [`sample_results/examples/`](sample_results/examples/).
 
 ## Visualization
 
@@ -184,6 +193,10 @@ python run_framework.py --plot --results-dir sample_results
 
 `analysis.visualization.plot_types` selects `time_series` and `boxplot`. Each meter gets its own row and y-axis because the random ranges differ. A meter with no valid samples is labeled and does not crash the plot. Without matplotlib the function returns `None`.
 
+## Reading results across meters
+
+The three meters work in different ranges (ENTES about 50 A, Greenlee and CIRCUTOR well below 1 A), so compare dimensionless figures, not raw amps: `relative_spread` (std/|mean|), the 95% confidence interval of the mean as a percent of the mean (`ci95 +/-%`), and `outliers`. Raw `mean` and `std` are not comparable between meters. A narrow CI means the mean is well determined by this run, not that it is correct; only `reference_current_a` gives accuracy.
+
 ## Known limitations
 
 - The emulators draw random currents. They have no true reference. `relative_spread` is precision (spread), not accuracy.
@@ -192,11 +205,11 @@ python run_framework.py --plot --results-dir sample_results
 - A `Winners:` summary is appended to the comparison report with three categories: most precise ammeter (lowest relative spread), most accurate ammeter (lowest absolute relative error, only shown when a reference is available), and most reliable communication (highest measurement success rate). The reliability category reports communication reliability, not overall measurement quality. The winners are a display-only summary and do not change the ranked table order.
 - Servers handle one client at a time.
 - Scheduling is best-effort, not hard real-time. A fast in-process reader stays within 50 ms of the schedule (`TIMING_TOLERANCE_S`). TCP latency can be larger and shows up as jitter or `late_samples`. The schedule rule is in [DESIGN.md](DESIGN.md).
-- Windows and macOS are verified by the GitHub Actions workflow in [`.github/workflows/tests.yml`](https://github.com/almi131/ammeter-test-framework/actions/workflows/tests.yml); the latest run on all three OSes is green.
+- Windows and macOS are exercised only by the GitHub Actions workflow in [`.github/workflows/tests.yml`](https://github.com/almi131/ammeter-test-framework/actions/workflows/tests.yml). Check the badge for the current status.
 
 ## Cross-platform verification
 
-The GitHub Actions workflow in `.github/workflows/tests.yml` runs the pytest suite, `python main.py`, and `python examples/run_tests.py` on `ubuntu-latest`, `windows-latest`, and `macos-latest` with Python 3.12. The latest successful workflow run proves those three commands pass on all three operating systems. See the full run history at https://github.com/almi131/ammeter-test-framework/actions/workflows/tests.yml. The badge at the top of this file reflects the status of `main`.
+The GitHub Actions workflow in `.github/workflows/tests.yml` runs the pytest suite, `python main.py`, and `python examples/run_tests.py` on `ubuntu-latest`, `windows-latest`, and `macos-latest` with Python 3.12. A green run means those three commands passed on all three operating systems. See the run history at https://github.com/almi131/ammeter-test-framework/actions/workflows/tests.yml. The badge at the top of this file reflects the status of `main`.
 
 ## Operating systems
 

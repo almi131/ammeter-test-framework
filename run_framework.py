@@ -1,7 +1,5 @@
 """Start the emulators, run the test framework for every configured ammeter, print and save results."""
 import argparse
-import contextlib
-import io
 import sys
 import threading
 from pathlib import Path
@@ -61,11 +59,11 @@ def sampling_override(base, count=None, duration=None, frequency=None):
     return merged
 
 
-def start_emulators(framework: AmmeterTestFramework) -> None:
+def start_emulators(framework: AmmeterTestFramework, verbose: bool = False) -> None:
     for name, spec in framework.specs.items():
         cls = EMULATORS.get(name)
         if cls:
-            threading.Thread(target=cls(spec.port).start_server, daemon=True).start()
+            threading.Thread(target=cls(spec.port, verbose=verbose).start_server, daemon=True).start()
     for spec in framework.specs.values():
         wait_until_accepting(spec.host, spec.port, name=spec.name)
 
@@ -89,11 +87,9 @@ def main(argv=None) -> int:
         names = args.ammeters or fw.ammeter_names
         fw.plan_for(sampling)
 
-        quiet = contextlib.nullcontext() if args.verbose else contextlib.redirect_stdout(io.StringIO())
-        with quiet:  # emulators print on every request
-            if not args.no_emulators:
-                start_emulators(fw)
-            results = fw.run_all(names, sampling)
+        if not args.no_emulators:
+            start_emulators(fw, verbose=args.verbose)
+        results = fw.run_all(names, sampling)
     except (ConfigError, RuntimeError, OSError) as e:  # OSError: missing config, unusable results dir
         print(f"ERROR: {e}", file=sys.stderr)
         return 2

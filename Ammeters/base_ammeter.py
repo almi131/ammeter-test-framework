@@ -1,8 +1,10 @@
+import os
 import socket
 import threading
 import time
 import random
 from abc import ABC, abstractmethod
+from typing import Optional
 
 NotImplementedErrorMsg = "Subclasses must implement this property."
 
@@ -20,10 +22,16 @@ def wait_until_accepting(host, port, timeout=10, name=None):
     raise RuntimeError(f"Emulator '{label}' not reachable on {host}:{port}")
 
 class AmmeterEmulatorBase(ABC):
-    def __init__(self, port: int):
+    def __init__(self, port: int, verbose: Optional[bool] = None):
         self.port = port
+        # Quiet by default; verbose=True or AMMETER_VERBOSE=1 prints the emulator's activity.
+        self.verbose = os.environ.get("AMMETER_VERBOSE", "") not in ("", "0") if verbose is None else verbose
         self._stop = threading.Event()
         random.seed(time.time())  # Seed the random number generator for each instance
+
+    def log(self, message: str) -> None:
+        if self.verbose:
+            print(message)
 
     def stop(self):
         """Unblock the accept loop so the listening port can be released."""
@@ -43,7 +51,7 @@ class AmmeterEmulatorBase(ABC):
             s.bind(('localhost', self.port))
             s.listen()
             s.settimeout(0.5)
-            print(f"{self.__class__.__name__} is running on port {self.port}")
+            self.log(f"{self.__class__.__name__} is running on port {self.port}")
             while not self._stop.is_set():
                 try:
                     conn, addr = s.accept()
@@ -53,7 +61,7 @@ class AmmeterEmulatorBase(ABC):
                     conn.close()
                     break
                 with conn:
-                    print(f"Connected by {addr}")
+                    self.log(f"Connected by {addr}")
                     try:
                         data = conn.recv(1024)
                     except OSError:

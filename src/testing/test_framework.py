@@ -105,6 +105,30 @@ def _stdev(v: List[float]) -> float:
     return statistics.stdev(v) if len(v) > 1 else 0.0  # sample std dev (n-1)
 
 
+# Two-sided 95% Student t by degrees of freedom 1..30; the normal 1.96 beyond that.
+_T95 = (12.706, 4.303, 3.182, 2.776, 2.571, 2.447, 2.365, 2.306, 2.262, 2.228, 2.201, 2.179, 2.160,
+        2.145, 2.131, 2.120, 2.110, 2.101, 2.093, 2.086, 2.080, 2.074, 2.069, 2.064, 2.060, 2.056,
+        2.052, 2.048, 2.045, 2.042)
+
+
+def ci95_half_width(v: List[float]) -> Optional[float]:
+    """Half-width of the 95% confidence interval of the mean; None for fewer than 2 values."""
+    n = len(v)
+    if n < 2:
+        return None
+    t = _T95[n - 2] if n - 1 <= len(_T95) else 1.96
+    return t * _stdev(v) / math.sqrt(n)
+
+
+def count_outliers(v: List[float]) -> int:
+    """Values outside [Q1 - 1.5 IQR, Q3 + 1.5 IQR] (Tukey fences); 0 for fewer than 4 values."""
+    if len(v) < 4:
+        return 0
+    q1, _, q3 = statistics.quantiles(v, n=4)
+    iqr = q3 - q1
+    return sum(x < q1 - 1.5 * iqr or x > q3 + 1.5 * iqr for x in v)
+
+
 METRICS: Dict[str, Callable[[List[float]], float]] = {
     "mean": statistics.fmean,
     "median": statistics.median,
@@ -125,7 +149,8 @@ def check_metrics(names) -> None:
 def compute_stats(values: List[float], metrics: Optional[List[str]] = None) -> Dict:
     """Requested metrics plus count. None means every metric. An empty list means count only.
 
-    relative_spread (std/|mean|) is added whenever at least one metric is computed.
+    relative_spread (std/|mean|), ci95_low/ci95_high (95% CI of the mean) and outliers (IQR rule)
+    are added whenever at least one metric is computed.
     """
     if metrics is not None:
         check_metrics(metrics)  # reject unknown names even when there are no samples
@@ -138,6 +163,10 @@ def compute_stats(values: List[float], metrics: Optional[List[str]] = None) -> D
     stats.update({m: METRICS[m](values) for m in names})
     mean, std = statistics.fmean(values), _stdev(values)
     stats["relative_spread"] = std / abs(mean) if mean else None
+    half = ci95_half_width(values)
+    stats["ci95_low"] = None if half is None else mean - half
+    stats["ci95_high"] = None if half is None else mean + half
+    stats["outliers"] = count_outliers(values)
     return stats
 
 
@@ -552,8 +581,11 @@ class AmmeterTestFramework:
         for name, r in results.items():
             s = r["stats"]
             n = len(r["samples"])
+            half = None if s.get("ci95_high") is None else (s["ci95_high"] - s["ci95_low"]) / 2
             row = {"ammeter": name, "relative_spread": s.get("relative_spread"),
                    "mean": s.get("mean"), "std_dev": s.get("std_dev"),
+                   "ci95_rel": half / abs(s["mean"]) if half is not None and s.get("mean") else None,
+                   "outliers": s.get("outliers"),
                    "error_rate": r["metadata"]["error_count"] / n if n else None,
                    "success_rate": (s.get("count") or 0) / n if n else None}
             ref = reference_current_a
@@ -604,6 +636,10 @@ def format_report(result: Dict) -> str:
         lines.append(f"  stats (A): n={s['count']}  mean={_fmt(s.get('mean'))}  median={_fmt(s.get('median'))}  "
                      f"std={_fmt(s.get('std_dev'))}  min={_fmt(s.get('min'))}  max={_fmt(s.get('max'))}  "
                      f"rel.spread={_fmt(s.get('relative_spread'), '.3f')}")
+        if "ci95_low" in s:
+            lo, hi = s["ci95_low"], s["ci95_high"]
+            lines.append("  95% CI   : " + ("n/a (needs 2+ samples)" if lo is None else f"[{lo:.4f}, {hi:.4f}] A")
+                         + f"  outliers (IQR): {s['outliers']}")
     else:
         lines.append("  stats    : no valid samples")
     if "relative_error" in s:
@@ -691,13 +727,15 @@ def format_ammeter_comparison(rows: List[Dict]) -> str:
         title = "Ammeter comparison (ranked by |relative error|; lower is closer to the reference):"
     else:
         title = "Ammeter comparison (ranked by relative spread; lower is more consistent, not more accurate):"
-    header = f"  {'rank':<5}{'ammeter':<10}{'rel.spread':>11}{'success':>10}"
+    header = f"  {'rank':<5}{'ammeter':<10}{'rel.spread':>11}{'ci95 +/-%':>11}{'outliers':>9}{'success':>10}"
     if show_acc:
         header += f"{'rel.err':>10}"
     header += f"{'mean (A)':>11}{'std (A)':>11}{'err rate':>10}"
     lines = [title, header]
     for r in rows:
+        ci = r.get("ci95_rel")
         line = (f"  {r['rank']:<5}{r['ammeter']:<10}{_fmt(r['relative_spread'], '.3f'):>11}"
+                f"{_fmt(None if ci is None else ci * 100, '.1f'):>11}{_fmt(r.get('outliers'), 'd'):>9}"
                 f"{_fmt(r.get('success_rate'), '.1%'):>10}")
         if show_acc:
             line += f"{_fmt(r.get('relative_error')):>10}"

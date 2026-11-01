@@ -1,10 +1,10 @@
 {
   "rows": [
     {
-      "run_id": "meter_20261030T223448_c17c8fec",
-      "ammeter": "meter",
+      "run_id": "bench_20261101T050036_c23364a1",
+      "ammeter": "bench",
       "status": "ok",
-      "start_time": "2026-10-30T22:34:48.073424+00:00",
+      "start_time": "2026-11-01T05:00:36.169471+00:00",
       "count": 4,
       "mean": 10.0,
       "median": 10.0,
@@ -12,13 +12,16 @@
       "min": 10.0,
       "max": 10.0,
       "relative_spread": 0.0,
+      "ci95_low": 10.0,
+      "ci95_high": 10.0,
+      "outliers": 0,
       "mean_delta_pct": 0.0
     },
     {
-      "run_id": "meter_20261030T223448_1fd7f5d3",
-      "ammeter": "meter",
+      "run_id": "bench_20261101T050036_41c61423",
+      "ammeter": "bench",
       "status": "ok",
-      "start_time": "2026-10-30T22:34:48.074726+00:00",
+      "start_time": "2026-11-01T05:00:36.476749+00:00",
       "count": 4,
       "mean": 20.0,
       "median": 20.0,
@@ -26,8 +29,11 @@
       "min": 20.0,
       "max": 20.0,
       "relative_spread": 0.0,
+      "ci95_low": 20.0,
+      "ci95_high": 20.0,
+      "outliers": 0,
       "mean_delta_pct": 100.0
     }
   ],
-  "report": "  run_id                                    mean    median       std       min       max  d_mean%\n  meter_20261030T223448_c17c8fec         10.0000   10.0000    0.0000   10.0000   10.0000      0.0\n  meter_20261030T223448_1fd7f5d3         20.0000   20.0000    0.0000   20.0000   20.0000    100.0"
+  "report": "  run_id                                    mean    median       std       min       max  d_mean%\n  bench_20261101T050036_c23364a1         10.0000   10.0000    0.0000   10.0000   10.0000      0.0\n  bench_20261101T050036_41c61423         20.0000   20.0000    0.0000   20.0000   20.0000    100.0"
 }

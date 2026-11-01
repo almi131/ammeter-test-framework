@@ -1,0 +1,10 @@
+2026-11-01 07:00:17,022 | INFO    | test_framework | [greenlee_20261101T050017_443475bf] start: {'measurements_count': 10, 'total_duration_seconds': 1.0, 'sampling_frequency_hz': 10.0, 'last_sample_s': 0.9}
+2026-11-01 07:00:17,928 | INFO    | test_framework | [greenlee_20261101T050017_443475bf] saved to <repo>/sample_results/greenlee_20261101T050017_443475bf.json
+2026-11-01 07:00:17,928 | INFO    | test_framework | [greenlee_20261101T050017_443475bf] done: status=ok, errors=0
+2026-11-01 07:00:17,929 | INFO    | test_framework | [entes_20261101T050017_9b259d9c] start: {'measurements_count': 10, 'total_duration_seconds': 1.0, 'sampling_frequency_hz': 10.0, 'last_sample_s': 0.9}
+2026-11-01 07:00:18,832 | INFO    | test_framework | [entes_20261101T050017_9b259d9c] saved to <repo>/sample_results/entes_20261101T050017_9b259d9c.json
+2026-11-01 07:00:18,832 | INFO    | test_framework | [entes_20261101T050017_9b259d9c] done: status=ok, errors=0
+2026-11-01 07:00:18,832 | INFO    | test_framework | [circutor_20261101T050018_72020f10] start: {'measurements_count': 10, 'total_duration_seconds': 1.0, 'sampling_frequency_hz': 10.0, 'last_sample_s': 0.9}
+2026-11-01 07:00:19,734 | INFO    | test_framework | [circutor_20261101T050018_72020f10] saved to <repo>/sample_results/circutor_20261101T050018_72020f10.json
+2026-11-01 07:00:19,735 | INFO    | test_framework | [circutor_20261101T050018_72020f10] done: status=ok, errors=0
+2026-11-01 07:00:19,740 | INFO    | test_framework | [20261101T050019Z_a2bf124a] archived: greenlee, entes, circutor

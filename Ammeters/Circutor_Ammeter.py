@@ -13,7 +13,7 @@ class CircutorAmmeter(AmmeterEmulatorBase):
         time_step = generate_random_float(0.001, 0.01)  # Time step (0.001s - 0.01s)
         voltages = [generate_random_float(0.1, 1.0) for _ in range(num_samples)]  # Voltage values
 
-        print(f"CIRCUTOR Ammeter - Voltages: {voltages}, Time Step: {time_step}s")
+        self.log(f"CIRCUTOR Ammeter - Voltages: {voltages}, Time Step: {time_step}s")
         current = sum(v * time_step for v in voltages)
-        print(f"Current: {current}A")
+        self.log(f"Current: {current}A")
         return current

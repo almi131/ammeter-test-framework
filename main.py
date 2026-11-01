@@ -16,15 +16,15 @@ from Ammeters.client import request_current_from_ammeter
 
 
 def run_greenlee_emulator():
-    greenlee = GreenleeAmmeter(5001)
+    greenlee = GreenleeAmmeter(5001, verbose=True)
     greenlee.start_server()
 
 def run_entes_emulator():
-    entes = EntesAmmeter(5002)
+    entes = EntesAmmeter(5002, verbose=True)
     entes.start_server()
 
 def run_circutor_emulator():
-    circutor = CircutorAmmeter(5003)
+    circutor = CircutorAmmeter(5003, verbose=True)
     circutor.start_server()
 
 if __name__ == "__main__":
@@ -48,4 +48,4 @@ if __name__ == "__main__":
     request_current_from_ammeter(
         5003,
         b'MEASURE_CIRCUTOR -get_measurement -current'
-    )
+    )
